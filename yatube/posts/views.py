@@ -29,8 +29,8 @@ def group_posts(request, slug):
     '''Функция страницы с групповыми
        Передает в posts/group_list.html запрос и словарь context
        Ограничивает кол-во постов на странице до 10
-       Подключена навигация с помощью пагинатора'''  
-    group = get_object_or_404(Group, slug=slug)  
+       Подключена навигация с помощью пагинатора'''
+    group = get_object_or_404(Group, slug=slug)
     posts = Post.objects.all()
     paginator = Paginator(posts, posts_on_page)
     page_number = request.GET.get('page')
