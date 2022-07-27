@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 
+from http import HTTPStatus
+
 from posts.models import Post, Group
 
 
@@ -22,10 +24,17 @@ class PostURLTest(TestCase):
             pub_date='Тестовая дата публикации',
             author=cls.user,
         )
+        cls.urls = {
+            '/': HTTPStatus.OK,
+            f'/group/{cls.group.slug}/': HTTPStatus.OK,
+            f'/posts/{1}/': HTTPStatus.OK,
+            f'/profile/{cls.user.username}/': HTTPStatus.OK,
+            '/create/': HTTPStatus.OK,
+            f'/posts/{1}/edit/': HTTPStatus.OK
+        }
 
     def setUp(self) -> None:
         #  Создание неавторизованного пользователя
-        self.guest_client = Client()
         self.user = User.objects.create_user(username='NoName')
         #  Создание авторизованного пользователя
         self.authorized_client = Client()
@@ -33,17 +42,12 @@ class PostURLTest(TestCase):
 
     def test_guest_client(self):
         '''Какие страницы доступны неавторизованному пользователю '''
-        urls = {
-            '/': 200,
-            f'/group/{self.group.slug}/': 200,
-            f'/posts/{1}/': 200,
-            f'/profile/{self.user.username}/': 200,
-            '/create/': 302,
-            f'/posts/{1}/edit/': 302
-        }
+        urls = self.urls
+        self.urls['/create/'] = HTTPStatus.FOUND
+        self.urls[f'/posts/{1}/edit/'] = HTTPStatus.FOUND
         for url, response_code in urls.items():
             with self.subTest(url=url):
-                status_code = self.guest_client.get(url).status_code
+                status_code = self.client.get(url).status_code
                 self.assertEqual(response_code, status_code)
 
     def test_authorized_client(self):
@@ -51,14 +55,7 @@ class PostURLTest(TestCase):
         #  Если пользователь авторизован,
         #  и является автором поста - должны быть доступны все страницы
         if self.post.author == self.user.username:
-            urls = {
-                '/': 200,
-                f'/group/{self.group.slug}/': 200,
-                f'/posts/{1}/': 200,
-                f'/profile/{self.user.username}/': 200,
-                '/create/': 200,
-                f'/posts/{1}/edit/': 200
-            }
+            urls = self.urls
             for url, response_code in urls.items():
                 with self.subTest(url=url):
                     status_code = self.authorized_client.get(url).status_code
@@ -66,14 +63,8 @@ class PostURLTest(TestCase):
         #  Если пользователь не является автором поста
         #  должна быть недоступна страница редактирования поста
         else:
-            urls = {
-                '/': 200,
-                f'/group/{self.group.slug}/': 200,
-                f'/posts/{1}/': 200,
-                f'/profile/{self.user.username}/': 200,
-                '/create/': 200,
-                f'/posts/{1}/edit/': 302
-            }
+            self.urls[f'/posts/{1}/edit/'] = HTTPStatus.FOUND
+            urls = self.urls
             for url, response_code in urls.items():
                 with self.subTest(url=url):
                     status_code = self.authorized_client.get(url).status_code
@@ -89,5 +80,5 @@ class PostURLTest(TestCase):
         }
         for url, template in urls.items():
             with self.subTest(url=url):
-                response = self.guest_client.get(url)
+                response = self.client.get(url)
                 self.assertRedirects(response, template)

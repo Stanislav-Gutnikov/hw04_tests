@@ -24,6 +24,9 @@ class PostViewsTest(TestCase):
             author=cls.user,
             group=cls.group
         )
+        cls.group_kwargs = {'slug': 'test-slug'}
+        cls.author_kwargs = {'username': f'{cls.post.author}'}
+        cls.post_id_kwargs = {'post_id': 1}
 
     def setUp(self) -> None:
         #  Создание авторизованного пользователя
@@ -33,15 +36,15 @@ class PostViewsTest(TestCase):
     def test_pages_uses_correct_template(self):
         templates = {
             reverse('posts:index'): 'posts/index.html',
-            reverse('posts:group_list', kwargs={
-                'slug': 'test-slug'}): 'posts/group_list.html',
-            reverse('posts:profile', kwargs={
-                'username': f'{self.post.author}'}): 'posts/profile.html',
-            reverse('posts:post_detail', kwargs={
-                'post_id': 1}): 'posts/post_detail.html',
+            reverse('posts:group_list', kwargs=self.group_kwargs):
+                'posts/group_list.html',
+            reverse('posts:profile', kwargs=self.author_kwargs):
+                'posts/profile.html',
+            reverse('posts:post_detail', kwargs=self.post_id_kwargs):
+                'posts/post_detail.html',
             reverse('posts:post_create'): 'posts/post_create.html',
-            reverse('posts:post_edit', kwargs={
-                'post_id': 1}): 'posts/post_create.html'
+            reverse('posts:post_edit', kwargs=self.post_id_kwargs):
+                'posts/post_create.html'
         }
         for reverse_name, template in templates.items():
             with self.subTest(reverse_name=reverse_name):
@@ -51,10 +54,10 @@ class PostViewsTest(TestCase):
     def test_pages_uses_correct_context(self):
         context = {
             reverse('posts:index'): self.post,
-            reverse('posts:group_list', kwargs={
-                'slug': 'test-slug'}): self.post,
-            reverse('posts:profile', kwargs={
-                'username': f'{self.post.author}'}): self.post
+            reverse('posts:group_list', kwargs=self.group_kwargs):
+                self.post,
+            reverse('posts:profile', kwargs=self.author_kwargs):
+                self.post
         }
         for reverse_name, object in context.items():
             with self.subTest(reverse_name=reverse_name):
@@ -67,7 +70,7 @@ class PostViewsTest(TestCase):
 
     def test_post_detail_uses_correct_context(self):
         response = self.authorized_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': 1}))
+            reverse('posts:post_detail', kwargs=self.post_id_kwargs))
         object = response.context['post']
         self.assertEqual(self.post.text, object.text)
         self.assertEqual(self.post.pub_date, object.pub_date)
@@ -77,7 +80,7 @@ class PostViewsTest(TestCase):
     def test_post_form_uses_correct_context(self):
         context = [
             reverse('posts:post_create'),
-            reverse('posts:post_edit', kwargs={'post_id': 1})
+            reverse('posts:post_edit', kwargs=self.post_id_kwargs)
         ]
         for reverse_name in context:
             with self.subTest(reverse_name=reverse_name):
@@ -93,6 +96,7 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        cls.thirteen_test_posts = 13
         cls.user = User.objects.create_user(username='auth1')
         cls.group = Group.objects.create(
             title='Тестовый заголовок',
@@ -105,7 +109,7 @@ class PaginatorViewsTest(TestCase):
             author=cls.user,
             group=cls.group
         )
-            for i in range(13)
+            for i in range(cls.thirteen_test_posts)
         ]
 
     def setUp(self) -> None:
