@@ -24,13 +24,14 @@ class PostURLTest(TestCase):
             pub_date='Тестовая дата публикации',
             author=cls.user,
         )
+        cls.post_id = cls.post.id
         cls.urls = {
             '/': HTTPStatus.OK,
             f'/group/{cls.group.slug}/': HTTPStatus.OK,
-            f'/posts/{1}/': HTTPStatus.OK,
+            f'/posts/{cls.post_id}/': HTTPStatus.OK,
             f'/profile/{cls.user.username}/': HTTPStatus.OK,
             '/create/': HTTPStatus.OK,
-            f'/posts/{1}/edit/': HTTPStatus.OK
+            f'/posts/{cls.post_id}/edit/': HTTPStatus.OK
         }
 
     def setUp(self) -> None:
@@ -44,7 +45,7 @@ class PostURLTest(TestCase):
         '''Какие страницы доступны неавторизованному пользователю '''
         urls = self.urls
         self.urls['/create/'] = HTTPStatus.FOUND
-        self.urls[f'/posts/{1}/edit/'] = HTTPStatus.FOUND
+        self.urls[f'/posts/{self.post_id}/edit/'] = HTTPStatus.FOUND
         for url, response_code in urls.items():
             with self.subTest(url=url):
                 status_code = self.client.get(url).status_code
@@ -63,7 +64,7 @@ class PostURLTest(TestCase):
         #  Если пользователь не является автором поста
         #  должна быть недоступна страница редактирования поста
         else:
-            self.urls[f'/posts/{1}/edit/'] = HTTPStatus.FOUND
+            self.urls[f'/posts/{self.post_id}/edit/'] = HTTPStatus.FOUND
             urls = self.urls
             for url, response_code in urls.items():
                 with self.subTest(url=url):
@@ -76,7 +77,7 @@ class PostURLTest(TestCase):
            '/create/', '/posts/<post_id>/edit/' '''
         urls = {
             '/create/': '/auth/login/?next=/create/',
-            f'/posts/{1}/edit/': '/auth/login/?next=/posts/1/edit/'
+            f'/posts/{self.post_id}/edit/': '/auth/login/?next=/posts/1/edit/'
         }
         for url, template in urls.items():
             with self.subTest(url=url):

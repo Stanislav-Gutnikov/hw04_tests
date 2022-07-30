@@ -26,7 +26,7 @@ class PostViewsTest(TestCase):
         )
         cls.group_kwargs = {'slug': 'test-slug'}
         cls.author_kwargs = {'username': f'{cls.post.author}'}
-        cls.post_id_kwargs = {'post_id': 1}
+        cls.post_id_kwargs = {'post_id': cls.post.id}
 
     def setUp(self) -> None:
         #  Создание авторизованного пользователя
