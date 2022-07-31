@@ -42,10 +42,15 @@ class CreateNewPostForm(TestCase):
 
     def test_create_post(self):
         '''Авторизованный пользователь может создать пост
-           Пост сохраняется в БД'''
-        Post.objects.all().delete()
-
+           Пост сохраняется в БД''
+           Проверка группы и текста нового поста'''
         response = self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=self.form_data,
+            follow=True
+        )
+        Post.objects.all().delete()
+        self.authorized_client.post(
             reverse('posts:post_create'),
             data=self.form_data,
             follow=True
@@ -55,15 +60,6 @@ class CreateNewPostForm(TestCase):
         self.assertRedirects(response, reverse(
             'posts:profile', kwargs={'username': self.user.username}))
         self.assertEqual(Post.objects.count(), 1)
-
-    def test_new_post_atributes(self):
-        '''Проверка группы и текста нового поста'''
-        Post.objects.all().delete()
-        self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=self.form_data,
-            follow=True
-        )
         post = Post.objects.get()
         self.assertEqual(post.text, self.form_data['text'])
         self.assertEqual(post.group.id, self.form_data['group'])
@@ -85,11 +81,6 @@ class CreateNewPostForm(TestCase):
 
 
 class PostEditForm(TestCase):
-    form_data = {
-        'title': 'New',
-        'text': 'New something'
-    }
-
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
@@ -107,6 +98,11 @@ class PostEditForm(TestCase):
             group=cls.group
         )
         cls.post_id_kwargs = {'post_id': cls.post.id}
+        cls.form = PostForm()
+        cls.form_data = {
+            'group': cls.group.id,
+            'text': 'New something'
+        }
 
     def setUp(self) -> None:
         #  Создание авторизованного пользователя, автор поста
@@ -127,9 +123,9 @@ class PostEditForm(TestCase):
         # сохранились ли новые данные в БД
         # совпадает ли текст отредактированного поста в БД
         # с новым текстом из заполненной формы
-        self.assertTrue(Post.objects.filter(
-            text=self.form_data['text']
-        ).exists())
+        post = Post.objects.get()
+        self.assertEqual(post.text, self.form_data['text'])
+        self.assertEqual(post.group.id, self.form_data['group'])
 
     def test_post_edit_authorized_user_alien_post(self):
         '''Авторизованный пользователь не может отредактировать чужой пост.'''
