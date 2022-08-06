@@ -1,12 +1,20 @@
 <!--Главная страница сайта, ссылки ведут ко всем постам соответствующей группы -->
 {% extends 'base.html' %}
+
+{% load thumbnail %}
+
 {% block title %}   
   Главная страница
 {% endblock %} 
 {% block content %}
+{% include 'posts/includes/switcher.html' %}
+<div class="container py-5"> 
   <h1>Последние обновления на сайте</h1>
   {% for post in page_obj %}
     {% include 'posts/includes/author.html' %}
+    {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+      <img class="card-img my-2" src="{{ im.url }}">
+    {% endthumbnail %}
   <p>
     <a href="{% url 'posts:post_detail' post.pk %}">подробная информация </a> 
   </p>
@@ -18,4 +26,6 @@
 {% include 'posts/includes/paginator.html' %}
 <a href="{% url 'about:author' %}">Об авторе</a>
 <a href="{% url 'about:tech' %}">О технологиях</a>
+</div>
 {% endblock %}   
+

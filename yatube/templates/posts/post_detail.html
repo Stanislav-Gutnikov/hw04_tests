@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load thumbnail %}
   <title>
     {% block title%}
        Пост [Фокшаны.] Еще переходъ до Фо…
     {% endblock %}
 
 {% block content %}
+<div class="container py-5">
   <div class="row">
     <aside class="col-12 col-md-3">
       <ul class="list-group list-group-flush">
@@ -34,20 +36,25 @@
       </ul>
     </aside>
     <article class="col-12 col-md-9">
-      <p>
-           {{  post.text }}
-      </p>
-    </article>
-    {% if post.author == user %}
-      <div class="d-flex justify-content-end">
+
+    {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+      <img class="card-img my-2" src="{{ im.url }}">
+    {% endthumbnail %}
+      <p>{{ post.text }}</p>
+
+        {% include 'posts/add_comment.html'%}
+        {% if post.author == user %}
+          <div class="d-flex justify-content-end">
         
      
-        <a class="btn btn-sm text-muted" href="{% url 'posts:post_edit'  post.id %}"
-        role="button">
-         Редактировать
-      </a>
+            <a class="btn btn-primary" href="{% url 'posts:post_edit'  post.id %}"
+              role="button">
+              Редактировать
+            </a>
 
-      </div> 
-    {% endif %}
+           </div> 
+        {% endif %}
+    </article>
   </div> 
+</div> 
 {% endblock %}

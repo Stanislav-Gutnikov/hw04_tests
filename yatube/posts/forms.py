@@ -1,15 +1,16 @@
 
 from django import forms
-from .models import Post
+from .models import Post, Comment
 
 
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['text', 'group']
+        fields = ['text', 'group', 'image']
         labels = {
             'text': 'Текст поста',
-            'group': 'Группа, к которой будет относится пост'
+            'group': 'Группа',
+            'image': 'Картинка'
         }
 
         def clean_data(self):
@@ -17,3 +18,12 @@ class PostForm(forms.ModelForm):
             if not text:
                 raise forms.ValidationError('Пост не может быть без текста')
             return text
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+        labels = {
+            'text': 'Текст комментария'
+        }
